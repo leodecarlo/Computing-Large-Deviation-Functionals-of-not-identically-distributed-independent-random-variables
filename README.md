@@ -8,7 +8,20 @@ Here we refer to the arXiv version for the enumeration.
 
 The repository contains all the necessary header files to run the main script Large_Deviations_SCW.c, which computes the large deviation functionals (157) (or (161)) and (162). These are rate functionals of NOT-identically distributed independent Gaussian random variables; therefore, no explicit formula is possible. Moreover, the computed probabilities in (146) depend on a parameter \(x\), which sets the set of wavefunctions over which the probability integral (144) is computed. The computational techniques are developed for Gaussian random variables because of how wavefunction ensembles are defined, but they do not restrict to the Gaussian case.
 
+
+
+
+
 ## Computational Appendix F
+
+##Figures
+- **Figure 1**: [Geometry of the Domain D](figures/figure_1.png) - This figure shows the geometry of the domain D.See the papers for how to obtain it.
+- **Figure 2**: [Domain and Constraint Set, by Simulation](figures/SCW_D_and_G_plot.pdf) - This figure illustrates the domain and constraint set by sampling.
+- **Figure 3**: [I-functions of x](figures/SCWIplot.pdf) - This figure plots the I-functions of x.
+
+
+
+##Description
 
 After implementing the functions appearing in Math Appendix D in a program, we employed a sampling scheme to locate the constraint set. The idea is to choose at random a ray emanating from point $'P'$ of Figure One, then a point on the ray staying within the domain $D$. (We also tried a ray emanating from the origin, which gave similar results.)
 
