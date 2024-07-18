@@ -1,0 +1,23 @@
+This is input for Large_Deviations_SCW.c                             .                 
+scw1.dat                .
+scw2.dat                .
+scw3.dat                .
+scw4.dat                .
+scw5.dat                .
+scw6.dat                .
+Sim                     12
+N                       100000
+Extra                   10
+trapN                   10000
+Seed                    86745
+ChooseI                 2
+Biastwotwo              1
+Biastwoone              1
+Biasone                 -1
+.
+x                       0.1
+eps                     0.3
+Gammatwotwo             0.01
+Gammatwoone             0.01
+Gammaone                0.01
+.

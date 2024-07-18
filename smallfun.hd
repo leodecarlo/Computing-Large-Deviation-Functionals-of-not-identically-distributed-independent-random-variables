@@ -1,0 +1,531 @@
+
+/*  David Wick <wick@scharp.org> * 	* Tue, Dec 14, 2010 at 1:19 PM *
+To: wdavid.wick@gmail.com */
+/* smallfunctions.hd: useful floating-point routines */
+
+double max(struct vector *list,int first,int last)
+{
+ int i; double dum,ret;
+ char rt[] = "max";
+ if( first > last ) nrerror("Error in routine min: first > last??");else
+ if(list->type != 'v') nrerror("Type error in routine min.");else
+ if( (first < list->in)||(last > list->fin) )
+  nrerror("Index error in routine min");else
+ ret = Evec(list,first,rt);
+ for(i=first+1;i<=last;i++){
+  dum = Evec(list,i,rt);
+  if( dum > ret ) ret = dum ;else;
+ }
+ return ret;
+}
+
+double min(struct vector *list,int first,int last)
+{
+ int i; double dum,ret;
+ char rt[] = "min";
+ if( first > last ) nrerror("Error in routine min: first > last??");else
+ if(list->type != 'v') nrerror("Type error in routine min.");else
+ if( (first < list->in)||(last > list->fin) )
+  nrerror("Index error in routine min");else
+ ret = Evec(list,first,rt);
+ for(i=first+1;i<=last;i++){
+  dum = Evec(list,i,rt);
+  if( dum < ret ) ret = dum ;else;
+ }
+ return ret;
+}
+
+/* saturate: finds the point, sat times minimum, where a decreasing
+function nearly saturates */
+int saturate(struct vector *V,double sat)
+{  int i,ret,ok;
+  double dum,sm;
+  char rt[] = "saturate";
+ if(V->type != 'v') nrerror("Type error in saturate.");else;
+ if(sat < 1.0) nrerror("Error in saturate: sat < 1??"); else;
+  sm = sat*min(V,V->in,V->fin);
+  ret = V->fin;
+  i=V->in;ok=0;
+  while((i <= V->fin)&&(ok == 0)){
+   dum = Evec(V,i,rt);
+   if(dum < sm){
+      ret = i;ok++;
+   }
+   else i++;
+  }
+ return ret;
+}
+
+int locmin(struct vector *V)
+{  int i,ret;
+  double dum,dum1;
+  char rt[] = "locmin";
+ if(V->type != 'v') nrerror("Type error in saturate.");else;
+  ret = V->in;
+  dum = Evec(V,V->in,rt);
+  for(i=V->in + 1;i <= V->fin;i++){
+   dum1 = Evec(V,i,rt);
+   if(dum1 < dum) ret = i;else;
+  }
+ return ret;
+}
+
+
+double f_factorial(int k)
+{
+ int i;double dum;
+ dum = 1.0;
+ for(i=2;i<=k;i++){
+  dum = dum*i;
+ }
+ return dum;
+}
+
+double max_ratio(struct vector *vec)
+{
+  double dum,dum1,ret;
+  char rt[] = "max_ratio";
+  dum = max(vec,vec->in,vec->fin);
+  dum1 = min(vec,vec->in,vec->fin);
+  if(dum1 > 0.0) ret = dum/dum1;
+  else nrerror("Error in max_rat: min = 0??");
+ return ret;
+}
+
+
+void make_powers(double r,struct vector *pows)
+{
+ int i;double dum;
+ if(pows->type != 'v') nrerror("Type error in make_powers.");else;
+ if(pows->in != 0) nrerror("Index error in make_powers: first index not 0.");else;
+
+ dum = 1.0;pows->vec[0] = 1.0;
+ for(i=1;i<=pows->fin;i++){
+  dum = dum*r;
+  pows->vec[i] = dum;
+ }
+}
+
+double integer_power(double f,int k)
+{
+ double g,ret,dum;
+ if(k != 0){
+ if(f > 0.0){
+  dum = log(f)*k;
+  if(fabs(dum) < 100.0) ret = exp(dum);
+  else{
+    if(dum < 0.0) ret = 0.0;
+    else nrerror("Error in integer_power: possible over- or under-flow");
+  }
+ }
+ else{
+  if(f< 0.0){
+   dum = log(-f)*k;
+   if(fabs(dum) < 100.0) g = exp(dum);
+   else nrerror("Error in integer_power: possible over- or under-flow 2");
+   if((k/2)*2 == k) ret = g;
+   else ret = -g;
+  }
+  else{
+   if(k > 0) ret = 0.0;
+   else nrerror("Error in f_power:what is 0 to a negative power?");
+  }
+ }
+ }
+ else{
+ if(fabs(f) > 0.0) ret = 1.0;
+ else nrerror("Error in f_power:what is 0 to the zero-th power?");
+ }
+ return ret;
+}
+
+double s_integer_power(double f,int k,double safe)
+{
+ double g,ret,dum;
+ if(k != 0){
+ if(f > 0.0){
+  dum = log(f)*k;
+  if(fabs(dum) < safe) ret = exp(dum);
+  else{
+    if(dum < 0.0) ret = 0.0;
+    else nrerror("Error in integer_power: possible over- or under-flow");
+  }
+ }
+ else{
+  if(f< 0.0){
+   dum = log(-f)*k;
+   if(fabs(dum) < safe) g = exp(dum);
+   else nrerror("Error in integer_power: possible over- or under-flow 2");
+   if((k/2)*2 == k) ret = g;
+   else ret = -g;
+  }
+  else{
+   if(k > 0) ret = 0.0;
+   else nrerror("Error in f_power:what is 0 to a negative power?");
+  }
+ }
+ }
+ else{
+ if(fabs(f) > 0.0) ret = 1.0;
+ else nrerror("Error in f_power:what is 0 to the zero-th power?");
+ }
+ return ret;
+}
+
+double real_power(double base,double ex)
+{
+ double ret,dum;
+ if(base > 0.0){
+ dum = log(base)*ex;
+ if(fabs(dum) < 100.0) ret = exp(dum);
+ else{
+  if(dum < 0.0) ret = 0.0;
+  else nrerror("Error in real_power: possible overflow");
+ }
+ }
+ else{
+ if(base < 0.0) nrerror("Error in real_power: negative base");
+ else{
+  if(ex > 0.0) ret = 0.0;
+  else nrerror("Error in real_power: what is 0^0 or 0^neg?");
+ }
+ }
+ return ret;
+}
+
+double exp_s(double x,char st[])
+{
+ double ret;
+ if( fabs(x) < 200.0 ) ret = exp(x);
+ else{
+  if( x > 200.0) werror("Error in exp_s: x > 200.",st);
+  else{
+   if(x <= -200.0) ret = 1.0e-50;
+   else{
+    printf("In routine exp_s, x = %f.\n",x);
+    werror("Error in exp_s: what happened??",st);
+   }
+  }
+ }
+  return ret;
+}
+
+double exps(double x)
+{
+ double ret;
+ if( fabs(x) < 100.0 ) ret = exp(x);
+ else{
+  if( x > 100.0) nrerror("Error in exps: x > 100.");
+  else{
+   if(x < -100.0) ret = 0.0;
+   else nrerror("Error in exps: what happened??");
+  }
+ }
+  return ret;
+}
+
+double f_min(double a,double b)
+{
+  double ret;
+  ret = a;
+  if( b < a) ret = b;else;
+   return ret;
+}
+
+double f_max(double a,double b)
+{
+  double ret;
+  ret = a;
+  if( b > a) ret = b;else;
+   return ret;
+}
+
+double logfactorial(int n)
+{
+  int i; double ret,tpi,ln;
+  if((n<0)||(n > 100000)) nrerror("Error in logfactorial: n negative or two large??");else;
+  if(n < 50){
+   ret = 0.0;
+   for(i=1;i<=n;i++) ret = ret + log(i);
+  }
+  else{
+   tpi = 2*3.14159;
+   ln = log(n);
+   ret = n*ln - n + 0.5*(ln + log(tpi));
+  }
+return ret; 
+}
+
+
+void quadroots(double A,double B,double C,double *plusroot,double
+*minusroot)
+{
+ double ret,D,denom;
+ if(A == 0.0) nrerror("error in solvequad: A=0");else;
+ D = B*B - 4.0*A*C;
+ if(D < 0.0) nrerror("error in solvequad: D <0");
+ else D = sqrt(D);
+  if(B<0.0) (*plusroot) = 0.5*(-B + D)/A;
+  else (*plusroot) = 2.0*C/(-B - D);
+  if(B < 0.0) (*minusroot) = 2.0*C/(-B + D);
+  else (*minusroot) = 0.5*(-B - D)/A;
+}
+
+double solve_quad(double A,double B,double C,int sign)
+{
+ double ret,D,denom;
+ if(A == 0.0) nrerror("error in solvequad: A=0");else;
+ D = B*B - 4.0*A*C;
+ if(sign == 0) nrerror("error in solvequad: sign = 0??");
+ if(D < 0.0){
+   printf("A = %f;B = %f; C = %f; D = %f\n",A,B,C,D);
+   nrerror("error in solvequad: D <0");
+ }
+ else D = sqrt(D);
+ if(sign > 0){
+  if(B <= 0.0) ret = 0.5*(-B + D)/A;
+  else{
+     denom = -B - D;
+     if(denom < 0.0) ret = 2.0*C/denom;
+     else nrerror("Error in solve_quad: denom 0?");
+  }
+ }
+ else{
+  if(B < 0.0){
+   denom = -B + D;
+   if( denom > 0.0) ret = 2.0*C/denom;
+   else nrerror("Error in solve_quad 2: denom 0?");
+  }
+  else ret = 0.5*(-B - D)/A;
+ }
+ return ret;
+}
+
+double solve_quad_test(double A,double B,double C,int sign,int test)
+{
+ double ret,D,denom;
+ if(A == 0.0) nrerror("error in solvequad: A=0");else;
+ D = B*B - 4.0*A*C;
+ if(sign == 0) nrerror("error in solvequad: sign = 0??");
+ if(D < 0.0) nrerror("error in solvequad: D <0");
+ else D = sqrt(D);
+ if(sign > 0){
+  if(B <= 0.0) ret = 0.5*(-B + D)/A;
+  else{
+     denom = -B - D;
+     if(denom < 0.0) ret = 2.0*C/denom;
+     else nrerror("Error in solve_quad: denom 0?");
+  }
+ }
+ else{
+  if(B < 0.0){
+   denom = -B + D;
+   if( denom > 0.0) ret = 2.0*C/denom;
+   else nrerror("Error in solve_quad 2: denom 0?");
+  }
+  else ret = 0.5*(-B - D)/A;
+ }
+
+ if(test==1){
+   double dum;
+   dum = A*ret*ret + B*ret + C;
+   printf("In solve-quad, plugging in gave %f.\n",dum);
+ } else;
+
+ return ret;
+}
+
+int solve_quad_alt(double A,double B,double C,int sign,double *sol)
+{
+ int ret;
+ double D,denom;
+ if(A == 0.0) nrerror("error in solvequad: A=0");else;
+ D = B*B - 4.0*A*C;
+ if(D < 0.0) ret = 0;
+ else{
+ D = sqrt(D);
+ ret = 1;
+ if(sign > 0){
+   if(B <= 0.0) (*sol) = 0.5*(-B + D)/A;
+   else{
+     denom = -B - D;
+     if(denom < 0.0) (*sol) = 2.0*C/denom;
+     else nrerror("Error in solve_quad: denom 0?");
+   }
+ }
+ else{
+  if(B < 0.0){
+   denom = -B + D;
+   if( denom > 0.0) (*sol) = 2.0*C/denom;
+   else nrerror("Error in solve_quad 2: denom 0?");
+  }
+  else (*sol) = 0.5*(-B - D)/A;
+ }
+ }
+return ret;
+}
+
+int pos_root_alt(double A,double B,double C,double *root)
+{
+ int ret;
+ double xp,xm;
+ ret = solve_quad_alt(A,B,C,1,&xp);
+ if(ret == 0);
+ else{
+   if(xp > 0.0){
+    (*root) = xp;
+     ret = 1;
+   }
+   else{
+    ret = solve_quad_alt(A,B,C,-1,&xm);
+    if(ret == 0) nrerror("Error in pos_root_alt: impossible result"); else;
+    if(xm > 0.0){
+      (*root) = xm;
+      ret = 1;
+    }
+    else ret = 0;
+  }
+ }
+return ret;
+}
+
+double cuberoot(double u)
+{
+ double dum,ret;
+ if(u > 0.0) dum = log(u)/3.0;
+ else dum = log(-u)/3.0;
+ if( fabs(dum) < 100.0){
+   if(u > 0.0) ret = exp( dum );
+   else ret = - exp( dum );
+ } else nrerror("Error in cuberoot: exponent too large??");
+ return ret;
+}
+
+/* solve_cubic: finds a real root of a cubic, between LB and UB. Taken
+from NumRC, p. 157.
+Notes on the internet:
+The top google page was an historical piece about Cardano's method, in
+which the author failed to point out that it might fail.
+So he is not a mathematician.
+From Wikipedia page there is a version of the method below (that relies
+on an arccos function), but it didn't work.
+*/
+double solve_cubic(double a,double b,double c,double d,double LB,double
+UB,int test,int print,double eps, char rt[])
+{
+ double ret,root,rat,fac,D,p3theta,cu,
+   a1,a12,a13,a2,a3,Q,Q2,Q3,R,theta,pi;
+  if(a > 1.0e-20){
+    a1 = b/a;a2 = c/a;a3 = d/a;
+  }
+  else{
+    printf("Solve_cubic, in routine %s,...\n",rt);
+    printf("Solve_cubic says a = %g; oops?\n",a);
+    nrerror("Error in solve_cubic: first coefficient zero??.");
+  }
+  a12 = a1*a1;a13 = a12*a1;
+  Q = (a12 - 3*a2)/9;
+  R = (2*a13 - 9*a1*a2 + 27*a3)/54;
+  Q2 = Q*Q;
+  Q3 = Q*Q2;
+  rat = a1/3;
+  D = Q3 - R*R;
+ if(D < 0.0){ /* one real root: */
+  fac = cuberoot( sqrt(-D) + fabs(R) );
+  if(R >= 0.0) root = - (fac + Q/fac) - rat;
+  else root = (fac + Q/fac) - rat;
+ if( (root > LB - 1.0e-15)&&(root < UB + 1.0e-15)) ret = root;
+ else{
+    printf("Solve_cubic, in routine %s,...\n",rt);
+    printf("Solve_cubic says root = %g.\n",root);
+    printf("While the interval is [%g,%g].\n",LB,UB);
+     nrerror("Error in solve_cubic: no root in the interval.");
+ }
+ }
+ /* three real roots */
+ else{
+  /*pi = 3.14159;*/
+  pi =  acos(-1.0);
+  theta = acos(R/sqrt(Q3));
+ p3theta = theta/3;
+ root = -2*sqrt(Q)*cos(p3theta) - rat;
+ if( (root > LB - 1.0e-15)&&(root < UB + 1.0e-15)) ret = root;
+ else{
+  root = -2*sqrt(Q)*cos(p3theta + 2*pi/3) - rat;
+  if( (root > LB - 1.0e-15)&&(root < UB + 1.0e-15)) ret = root;
+  else{
+   root = -2*sqrt(Q)*cos(p3theta + 4*pi/3) - rat;
+    if( (root > LB - 1.0e-15)&&(root < UB + 1.0e-15)) ret = root;
+    else{
+      printf("Solve_cubic, in routine %s,...\n",rt);
+      printf("Solve_cubic says D = %g.\n",D);
+      printf("Solve_cubic (three root case) says root = %g.\n",root);
+      printf("While the interval is [%g,%g].\n",LB,UB);
+      nrerror("Error in solve_cubic: no root in the interval.");
+    }
+   }
+  }
+ }
+
+ if(test == 1){
+  cu = ret*(c + ret*(b+ ret*a)) +d;
+  if( fabs(cu) > eps ){
+   printf("Solve_cubic, in routine %s,...\n",rt);
+    printf("The error was %g.\n",cu);
+    nrerror("Error in solve_cubic: error too large.");
+  }
+  else{
+    if(print == 1) printf("The error was %g.\n",cu); else;
+  }
+ } else;
+return ret;
+}
+
+ /* The following, from Wikipedia, didn't work. */
+ /*else{
+ if(q3 < 0.0) rho = sqrt( - q3 );
+ else  nrerror("Error in solve_cubic: q3 wrong sign.");
+ diff = D - q3;
+ if(diff > 0.0) r = sqrt(diff);
+ if(r < rho) theta = acos(r/rho);
+ else nrerror("Error in solve_cubic: r > rho.");
+ printf("r/rho = %f and cos(theta) = %f.\n",r/rho,cos(theta));
+ crho = cuberoot(rho);
+ p3theta = theta/3;
+ spt = crho*cos(p3theta);
+ root = 2*spt - rat;
+ printf("First root.\n");
+ if( (root > LB - 1.0e-15)&&(root < UB + 1.0e-15)) ret = root;
+ else{
+  smt = crho*sin(p3theta);
+  root = -spt - rat - sqrt(3.0)*smt;
+ printf("Second root.\n");
+  if( (root > LB - 1.0e-15)&&(root < UB + 1.0e-15)) ret = root;
+  else{
+    root = -spt - rat + sqrt(3.0)*smt;
+    if( (root > LB - 1.0e-15)&&(root < UB + 1.0e-15)) ret = root;
+    else nrerror("Error in solve_cubic: no root in the interval.");
+ printf("root.\n");
+   }
+  }
+ } */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

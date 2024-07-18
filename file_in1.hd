@@ -1,0 +1,460 @@
+/* newfilemisc.hd; routines for file input/output */
+/* assumes inclusion of newdefs.hd */
+/* WARNING: the number of named ints is picked up from main
+as ints->vec[99] and the number of named floats is picked up from main
+as ints->vec[100]. */
+
+int advance(FILE *ftp, int a, int b)
+{
+  int t;int rt=1;char c;
+   for(t=1;t<=(b - a + 1);t++){
+    c = fgetc(ftp);
+   if( c != '\n');
+   else rt++;
+   }
+   return rt;
+}
+
+int gchar(FILE *ftp,int a,int b,struct cvector *list)
+{
+  int t;int rtt=1;char c;
+    for(t=1;t<=(b-a+1);t++){
+    if( (t<list->in)||(t>list->fin) ) nrerror("error in gchar");
+    else;
+      c = fgetc(ftp);
+   if( c != '\n') list->vec[t] = c;
+   else rtt++;
+   }
+   return rtt;
+}
+
+int compare(struct cvector *list1,struct cvector *list2)
+{
+  int t;int rt=1;
+  int a,b;
+   a = list1->in;b = list1->fin;
+   if( ( a != list2->in)||(b != list2->fin) ) rt--; else;
+    for(t=a;t<=b;t++){
+     if( list1->vec[t] != list2->vec[t] ) rt--; else;
+    }
+   return rt;
+}
+ 
+int toendline(FILE *ftp,int length)
+{
+  int j=1;char c;
+   while( ( (c = fgetc(ftp)) != '\n')&&(j<=length) ){
+    j++;
+    }
+   if(j > length) nrerror("error in toendline:didn't find it.");else;
+   return j;
+}
+
+/* file_float_length: determines the number of float (double) entries,
+assumed on separate lines, in a file. */
+
+int file_float_length(FILE *in,int *length,int Max_length)
+{
+ int ret, num,ind,stop;double st;
+ stop = 0;num = 0;
+ while( stop <= Max_length ){
+   if( (ind = fscanf(in,"%lf\n",&st)) != EOF ){
+      stop++;num++;
+    } 
+   else stop = Max_length + 10;
+ }
+
+ if(stop == Max_length + 10){
+  (*length) = num;
+  ret = 1;
+  } else ret = 0;
+  rewind(in); 
+  return ret;
+}
+
+/* scan_floats: inputs floats (doubles) from a file, where they
+must be listed on separate lines. */
+
+void scan_floats(FILE *in,struct vector *vec,int num)
+{
+ int i,ind;double st;
+ char rt[] = "scan_floats";
+ if( vec->fin - vec->in + 1 < num)
+ nrerror("error in scan_floats:the vector is too short.");else;
+ for(i = vec->in;i <= vec->in + num - 1;i++){
+   if( (ind = fscanf(in,"%lf\n",&st)) != EOF )
+    Avec(vec,i,st,rt);
+   else  nrerror("error in scan_floats:the end came too soon.");
+ }
+}
+
+/* This routine, "scanin", is the standard input method for
+file names, integer parameters, and float parameters.
+The message length is assumed < 50 characters;
+and variable namelength is <= 25 characters. Output file namelength
+is derived from vector "Outx" and must be one more than
+the number of characters in the output file names.
+The routine scans in the message, the
+output file names, the variable names (stored in cvector "names"),
+and the ints and doubles (stored in ivector "ints" and
+vector "doubles"). Put a period between the ints and the doubles
+and be sure that the variable names
+don't extend past 25 characters. WARNING: stores the number
+of ints found in ints[99] and the number of floats found in ints[100]
+so make sure there are > 100 ints. */
+
+void scanin(FILE *in,FILE *info,int named_ints,int named_floats,
+struct cvector *Out1,struct cvector *Out2,struct cvector *Out3,
+struct cvector *Out4,struct cvector *Out5,struct cvector *Out6,
+struct cvector *names,struct ivector *ints,struct vector *doubles) 
+{
+  int i,place,j,stop,int_stop,fl_stop,ints_found,floats_found;
+  char para[25];char c;
+  struct cvector Message;
+
+  char rt[] = "scanin";
+
+  incvec(&Message,1,49,"Message");
+
+  if( (ints->fin < named_ints)||(doubles->fin < named_floats) )
+      nrerror("Error in scanin: not enough ints or floats.");else;
+  if( (ints->in != 1)||(doubles->in != 1)||(names->in != 1) )
+      nrerror("Error in scanin: index error.");else;
+  if( (named_ints + named_floats)*25 > names->fin )
+     nrerror("Error in scanin: not enough characters in cvector names.");else;
+
+    fgets(&Message.vec[1],Message.fin,in);
+    fprintf(info,&Message.vec[1]);
+    fprintf(info,"\n");
+    toendline(in,500);
+
+    fgets(&Out1->vec[1],Out1->fin,in);
+    fprintf(info,&Out1->vec[1]);
+    fprintf(info,"\n");
+    toendline(in,500);
+
+    fgets(&Out2->vec[1],Out2->fin,in);
+    fprintf(info,&Out2->vec[1]);
+    fprintf(info,"\n");
+    toendline(in,500);
+
+    fgets(&Out3->vec[1],Out3->fin,in); 
+    fprintf(info,&Out3->vec[1]);
+    fprintf(info,"\n");
+    toendline(in,500);
+
+    fgets(&Out4->vec[1],Out4->fin,in); 
+    fprintf(info,&Out4->vec[1]);
+    fprintf(info,"\n");
+    toendline(in,500);
+
+
+    fgets(&Out5->vec[1],Out5->fin,in); 
+    fprintf(info,&Out5->vec[1]);
+    fprintf(info,"\n");
+    toendline(in,500);
+
+    fgets(&Out6->vec[1],Out6->fin,in); 
+    fprintf(info,&Out6->vec[1]);
+    fprintf(info,"\n\n");
+    toendline(in,500);
+
+  place = 0;i=1;stop=0;int_stop=0;ints_found=0;
+  while( (i<=named_ints)&&(stop == 0)&&(int_stop == 0) ){
+     fgets(para,25,in);
+     for(j=1;j<=25;j++){
+      c = para[j-1];
+      if( (c != EOF)&&(c != '.') )
+         Acvec(names,place+j,para[j-1],rt); 
+      else{
+        if(c == EOF) stop = 1;
+        else int_stop++;
+      }
+     }
+    if( (stop ==0)&&(int_stop==0) ){
+      fscanf(in,"%i\n",&ints->vec[i]);
+      fprintf(info,"%s = %i\n",para,Eivec(ints,i,rt));
+      place = place + 25;
+      ints_found++;
+    } 
+    else{
+      if( (stop ==0)&&(int_stop > 0) ); 
+      else nrerror("Error in scanin: found EOF while scanning ints.");
+    }
+    i++;
+   }
+
+  if(int_stop > 0){
+   if(ints_found < named_ints) Aivec(ints,99,ints_found,rt);
+   else nrerror("Error in scanin: maybe didn't find all the named_ints?");
+   i=1;stop=0;fl_stop=0;floats_found=0;
+   while( (i<=named_floats)&&(stop == 0)&&(fl_stop == 0) ){
+     fgets(para,25,in);
+     for(j=1;j<=25;j++){
+      c = para[j-1];
+      if( (c != EOF)&&(c != '.') )
+         Acvec(names,place+j,para[j-1],rt); 
+      else{
+        if(c == EOF) stop = 1;
+        else fl_stop++;
+      }
+     }
+    if( (stop ==0)&&(fl_stop==0) ){
+      fscanf(in,"%lf\n",&doubles->vec[i]);
+      fprintf(info,"%s = %g\n",para,Evec(doubles,i,rt));
+      place = place + 25;
+      floats_found++;
+    } 
+    else{
+      if( (stop ==0)&&(fl_stop > 0) );
+      else nrerror("Error in scanin: found EOF while scanning floats.");
+    }
+    i++;
+  }
+  if( (stop ==0)&&(fl_stop > 0) ){
+    if(floats_found < named_floats) Aivec(ints,100,floats_found,rt);
+    else nrerror("Error in scanin: maybe didn't find all the named_floats?");
+  }
+  else nrerror("Error in scanin: Never found end-of-floats (period).");
+ 
+ }
+ else{
+   nrerror("Error in scanin: Never found end-of-ints (period).");
+ }
+  fprintf(info,"\n\n");
+  freecvec(&Message);
+}
+
+/* The next routine accesses named ints by names.
+WARNING: the number of named ints is picked up from scanin 
+as ints->vec[99]. */
+
+int named_int(char var_name[],char rt[],struct cvector *names,
+struct ivector *ints,struct vector *doubles)
+{
+  int ret,len,asci,i,j,place,ok,find,named_ints;
+  struct cvector nm1,nm2;
+  char rt1[] = "named_int";
+  char cc,cc1;
+  named_ints = Eivec(ints,99,rt1);
+  
+  incvec(&nm1,1,25,"nm1");  incvec(&nm2,1,25,"nm2");
+
+  len=1;asci = ( (int) var_name[len-1] );
+  while( (asci != 0)&&(len <= 25) ){
+   asci = ( (int) var_name[len-1] );
+   Acvec(&nm1,len,var_name[len-1],rt1);
+   len++;
+  }
+  if(len <= 25) Acvec(&nm1,len-1,' ',rt1);
+  Acvec(&nm1,25,0,rt1);
+
+ /* for(i=1;i<=25;i++) printf("%c ",nm1.vec[i]); */
+/*  printcvec(&nm1);
+  printf("\n");
+ */
+  place = 0;i = 1;find = 0;
+  while( (i<=named_ints)&&(find == 0) ){
+    ok = 1;
+    for(j=1;j<=25;j++){
+     cc = Ecvec(names,place+j,rt1);
+   /*  Acvec(&nm2,j,cc,rt1); */
+     cc1 = Ecvec(&nm1,j,rt1);
+     if( cc == cc1 ); else ok--;
+    }
+   /* printcvec(&nm2);
+    printf("\n");
+   */
+    if(ok==1){
+     ret = Eivec(ints,i,rt1);
+     find++;
+    }
+    else{
+     i++; place = place + 25;
+    }
+  }
+
+  if(find == 0){
+printf("Error in named_int: no variable %s found in routine %s\n.",var_name,rt);
+   exit(1);
+  } else;
+  freecvec(&nm1);freecvec(&nm2);
+  return ret;
+}
+
+/* The next routine changes the values of named ints, called by names.
+WARNING: the number of named ints is picked up from main
+as ints->vec[99]. */
+
+int A_named_int(char var_name[],int val,char rt[],
+struct cvector *names,struct ivector *ints,struct vector *doubles)
+{
+  int len,asci,i,j,place,ok,find,named_ints;
+  struct cvector nm1,nm2;
+  char rt1[] = "named_int";
+  char cc,cc1;
+  named_ints = Eivec(ints,99,rt1);
+  
+  incvec(&nm1,1,25,"nm1");  incvec(&nm2,1,25,"nm2");
+
+  len=1;asci = ( (int) var_name[len-1] );
+  while( (asci != 0)&&(len <= 25) ){
+   asci = ( (int) var_name[len-1] );
+   Acvec(&nm1,len,var_name[len-1],rt1);
+   len++;
+  }
+  if(len <= 25) Acvec(&nm1,len-1,' ',rt1);
+  Acvec(&nm1,25,0,rt1);
+
+ /* for(i=1;i<=25;i++) printf("%c ",nm1.vec[i]); */
+/*  printcvec(&nm1);
+  printf("\n");
+ */
+  place = 0;i = 1;find = 0;
+  while( (i<=named_ints)&&(find == 0) ){
+    ok = 1;
+    for(j=1;j<=25;j++){
+     cc = Ecvec(names,place+j,rt1);
+   /*  Acvec(&nm2,j,cc,rt1); */
+     cc1 = Ecvec(&nm1,j,rt1);
+     if( cc == cc1 ); else ok--;
+    }
+   /* printcvec(&nm2);
+    printf("\n");
+   */
+    if(ok==1){
+     Aivec(ints,i,val,rt1);
+     find++;
+    }
+    else{
+     i++; place = place + 25;
+    }
+  }
+
+  if(find == 0){
+printf("Error in A_named_int: no variable %s found in routine %s\n.",var_name,rt);
+   exit(1);
+  } else;
+  freecvec(&nm1);freecvec(&nm2);
+}
+
+
+/* The next routine accesses a named float by its name.
+WARNING: the number of named ints is picked up from main
+as ints->vec[99] and the number of named floats is picked up from scanin
+as ints->vec[100]. */
+
+double named_float(char var_name[],char rt[],struct cvector *names,
+struct ivector *ints,struct vector *doubles)
+{
+  int len,asci,i,j,place,ok,find,named_ints,named_floats;
+  double ret;
+  struct cvector nm1,nm2;
+  char rt1[] = "named_int";
+  char cc,cc1;
+  named_ints = Eivec(ints,99,rt1);
+  named_floats = Eivec(ints,100,rt1);
+
+  incvec(&nm1,1,25,"nm1");incvec(&nm2,1,25,"nm2");
+
+  len=1;asci = ( (int) var_name[len-1] );
+  while( (asci != 0)&&(len <= 25) ){
+   asci = ( (int) var_name[len-1] );
+   Acvec(&nm1,len,var_name[len-1],rt1);
+   len++;
+  }
+  if(len <= 25) Acvec(&nm1,len-1,' ',rt1);
+  Acvec(&nm1,25,0,rt1);
+
+  place = named_ints*25; i = 1; find = 0;
+  while( (i<=named_floats)&&(find == 0) ){
+    ok = 1;
+    for(j=1;j<=25;j++){
+     cc = Ecvec(names,place+j,rt1);
+   /*  Acvec(&nm2,j,cc,rt1); */
+     cc1 = Ecvec(&nm1,j,rt1);
+     if( cc == cc1 ); else ok--;
+    }
+   /* printcvec(&nm2);
+    printf("\n");
+   */
+    if(ok==1){
+     ret = Evec(doubles,i,rt1);
+     find++;
+    }
+    else{
+     i++; place = place + 25;
+    }
+  }
+
+
+  if(find == 0){
+printf("Error in named_float: no variable %s found in routine %s\n.",var_name,rt);
+   exit(1);
+  } else;
+  freecvec(&nm1);freecvec(&nm2);
+ return ret;
+}
+
+
+/* The next routine assigns or changes a named float.
+WARNING: the number of named ints is picked up from main
+as ints->vec[99] and the number of named floats is picked up from main
+as ints->vec[100]. */
+
+void A_named_float(char var_name[],double val,char rt[],
+struct cvector *names,struct ivector *ints,struct vector *doubles)
+{
+  int len,asci,i,j,place,ok,find,named_ints,named_floats;
+  struct cvector nm1,nm2;
+  char rt1[] = "named_int";
+  char cc,cc1;
+  named_ints = Eivec(ints,99,rt1);
+  named_floats = Eivec(ints,100,rt1);
+
+  incvec(&nm1,1,25,"nm1");incvec(&nm2,1,25,"nm2");
+
+  len=1;asci = ( (int) var_name[len-1] );
+  while( (asci != 0)&&(len <= 25) ){
+   asci = ( (int) var_name[len-1] );
+   Acvec(&nm1,len,var_name[len-1],rt1);
+   len++;
+  }
+  if(len <= 25) Acvec(&nm1,len-1,' ',rt1);
+  Acvec(&nm1,25,0,rt1);
+
+  place = named_ints*25; i = 1; find = 0;
+  while( (i<=named_floats)&&(find == 0) ){
+    ok = 1;
+    for(j=1;j<=25;j++){
+     cc = Ecvec(names,place+j,rt1);
+   /*  Acvec(&nm2,j,cc,rt1); */
+     cc1 = Ecvec(&nm1,j,rt1);
+     if( cc == cc1 ); else ok--;
+    }
+   /* printcvec(&nm2);
+    printf("\n");
+   */
+    if(ok==1){
+     Avec(doubles,i,val,rt1);
+     find++;
+    }
+    else{
+     i++; place = place + 25;
+    }
+  }
+
+  if(find == 0){
+printf("Error in A_named_float: no variable %s found in routine %s\n.",var_name,rt);
+   exit(1);
+  } else;
+  freecvec(&nm1);freecvec(&nm2);
+}
+
+
+
+
+
+
+
+

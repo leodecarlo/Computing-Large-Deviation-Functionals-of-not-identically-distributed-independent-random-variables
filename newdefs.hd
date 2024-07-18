@@ -1,0 +1,578 @@
+/* newdefs.hd; contains wick's structures */
+/* 1/31/01: doubled , new elements for vectors and matrices
+with new evaluation and assignment routines, with
+automatic error checking. */
+
+#define NID names,ints,doubles
+#define SNID struct cvector *names,struct ivector *ints,struct vector *doubles
+#define ANID &names,&ints,&doubles
+
+void exit(int u);
+void nrerror(char error_text[])
+{
+ void exit();
+ printf("NR run-time error\n");
+ printf("%s\n",error_text);
+ exit(1);
+ }
+
+void werror(char error_text[],char rt[])
+{
+ void exit();
+ printf("Run-time error:\n");
+ printf("%s\n",error_text);
+ printf("... in routine %s\n",rt);
+ exit(1);
+ }
+
+void fnrerror(FILE *info,char error_text[])
+{
+ void exit();
+ printf("NR run-time error:\n");
+ fprintf(info,"NR run-time error:\n");
+ printf("%s\n",error_text);
+ fprintf(info,"%s\n",error_text);
+ exit(1);
+ }
+
+int **nrimatrix(int nrl,int nrh,int ncl,int nch)
+{
+int i;int **m;
+m=(int **) malloc((unsigned) (nrh-nrl+1)*sizeof(int*));
+if (!m) nrerror("allocation failure in imatrix-1");
+m -= nrl;
+
+for(i=nrl;i <= nrh;i++){
+ m[i]=(int *)malloc((unsigned) (nch-ncl+1)*sizeof(int));
+ if (!m[i]) nrerror("allocation failure in imatrix-2");
+ m[i] -= ncl;
+  }
+  return m;
+}
+
+double **nrmatrix(int nrl,int nrh,int ncl,int nch)
+{
+int i;double **m;
+m=(double **) malloc((unsigned) (nrh-nrl+1)*sizeof(double*));
+if (!m) nrerror("allocation failure in matrix-1");
+m -= nrl;
+
+for(i=nrl;i <= nrh;i++){
+m[i]=(double *)malloc((unsigned) (nch-ncl+1)*sizeof(double));
+ if (!m[i]) nrerror("allocation failure in matrix-2");
+ m[i] -= ncl;
+  }
+  return m;
+}
+
+char **nrcmatrix(int nrl,int nrh,int ncl,int nch)
+{
+int i;char **m;
+m=(char **) malloc((unsigned) (nrh-nrl+1)*sizeof(char*));
+if (!m) nrerror("allocation failure in cmatrix-1");
+m -= nrl;
+
+for(i=nrl;i <= nrh;i++){
+m[i]=(char *)malloc((unsigned) (nch-ncl+1)*sizeof(char));
+ if (!m[i]) nrerror("allocation failure in cmatrix-2");
+ m[i] -= ncl;
+  }
+  return m;
+}
+
+int *nrivector(int nl,int nh)
+{int *v;
+v=(int *)malloc((unsigned) (nh-nl+1)*sizeof(int));
+if(!v) nrerror("allocation failure in ivector");
+return v-nl;
+}
+
+double *nrvector(int nl,int nh)
+{double *v;
+v=(double *)malloc((unsigned) (nh-nl+1)*sizeof(double));
+if(!v) nrerror("allocation failure in vector");
+return v-nl;
+}
+
+void nrfree_ivector(int *v,int nl,int nh)
+{free((char *) (v+nl));
+}
+
+void nrfree_vector(double *v,int nl,int nh)
+{free((char *) (v+nl));
+}
+
+void nrfree_imatrix(int **m,int nrl,int nrh,int ncl,int nch)
+{int i;
+for(i=nrh;i >= nrl;i--) free((char*) (m[i]+ncl));
+free((char*) (m+nrl));
+}
+
+void nrfree_matrix(double **m,int nrl,int nrh,int ncl,int nch)
+{int i;
+for(i=nrh;i >= nrl;i--) free((char*) (m[i]+ncl));
+free((char*) (m+nrl));
+}
+
+void nrfree_cmatrix(char **m,int nrl,int nrh,int ncl,int nch)
+{int i;
+for(i=nrh;i >= nrl;i--) free((char*) (m[i]+ncl));
+free((char*) (m+nrl));
+}
+
+char *nrcvector(int nl,int nh)
+{char *v;
+v=(char *)malloc((unsigned) (nh-nl+1)*sizeof(char));
+if(!v) nrerror("allocation failure in cvector");
+return v-nl;
+}
+
+void nrfree_cvector(char *v,int nl,int nh)
+{free((char *) (v+nl));
+}
+
+struct vector
+{ char type;
+  char *ident;
+  double *vec;
+  int in;
+  int fin;
+};
+
+void invec(struct vector *ptr,int In,int Fin,char Ident[])
+{ int i;
+  ptr->type = 'v';
+  ptr->ident = Ident;
+  ptr->vec = nrvector(In,Fin);
+  ptr->in = In;
+  ptr->fin = Fin;
+  for(i=In;i<=Fin;i++) ptr->vec[i] = 0.0;
+}
+
+void freevec(struct vector *ptr)
+{if(ptr->type != 'v') nrerror("error in freevec");
+ nrfree_vector(ptr->vec,ptr->in,ptr->fin);
+}
+
+struct ivector
+{ char type;
+  char *ident;
+  int *vec;
+  int in;
+  int fin;
+};
+
+void inivec(struct ivector *ptr,int In,int Fin,char Ident[])
+{ int i;
+  ptr->type = 'V';
+  ptr->ident = Ident;
+  ptr->vec = nrivector(In,Fin);
+  ptr->in = In;
+  ptr->fin = Fin;
+  for(i=In;i<=Fin;i++) ptr->vec[i] = 0;
+}
+
+void freeivec(struct ivector *ptr)
+{if(ptr->type != 'V') nrerror("error in freeivec");
+
+ nrfree_ivector(ptr->vec,ptr->in,ptr->fin);
+}
+
+struct matrix
+{ char type;
+  char *ident;
+  double **mat;
+  int inrow;
+  int finrow;
+  int incol;
+  int fincol;
+};
+
+void inmat(struct matrix *ptr,int Inrow,int Finrow,
+int Incol,int Fincol,char Ident[])
+{ int i,j;
+  ptr->type = 'm';
+  ptr->ident = Ident;
+  ptr->mat = nrmatrix(Inrow,Finrow,Incol,Fincol);
+  ptr->inrow = Inrow;
+  ptr->finrow = Finrow;
+  ptr->incol = Incol;
+  ptr->fincol = Fincol;
+
+  for(i=Inrow;i<=Finrow;i++){
+  for(j=Incol;j<=Fincol;j++){
+   ptr->mat[i][j] = 0.0;
+   }
+   }
+}
+
+void freemat(struct matrix *ptr)
+{if(ptr->type != 'm') nrerror("error in freemat");
+  nrfree_matrix(ptr->mat,ptr->inrow,ptr->finrow,ptr->incol,ptr->fincol);
+}
+
+struct cmatrix
+{ char type;
+  char *ident;
+  char **mat;
+  int inrow;
+  int finrow;
+  int incol;
+  int fincol;
+};
+
+void incmat(struct cmatrix *ptr,int Inrow,int Finrow,
+int Incol,int Fincol,char Ident[])
+{ int i,j;
+  ptr->type = 'c';
+  ptr->ident = Ident;
+  ptr->mat = nrcmatrix(Inrow,Finrow,Incol,Fincol);
+  ptr->inrow = Inrow;
+  ptr->finrow = Finrow;
+  ptr->incol = Incol;
+  ptr->fincol = Fincol;
+}
+
+void freecmat(struct cmatrix *ptr)
+{if(ptr->type != 'c') nrerror("error in freecmat");
+  nrfree_cmatrix(ptr->mat,ptr->inrow,ptr->finrow,ptr->incol,ptr->fincol);
+}
+
+struct imatrix
+{ char type;
+  char *ident;
+  int **mat;
+  int inrow;
+  int finrow;
+  int incol;
+  int fincol;
+};
+
+void inimat(struct imatrix *ptr,int Inrow,int Finrow,
+int Incol,int Fincol,char Ident[])
+{ int i,j;
+  ptr->type = 'M';
+  ptr->ident = Ident;
+  ptr->mat = nrimatrix(Inrow,Finrow,Incol,Fincol);
+  ptr->inrow = Inrow;
+  ptr->finrow = Finrow;
+  ptr->incol = Incol;
+  ptr->fincol = Fincol;
+
+  for(i=Inrow;i<=Finrow;i++){
+  for(j=Incol;j<=Fincol;j++){
+   ptr->mat[i][j] = 0.0;
+   }
+   }
+}
+
+void freeimat(struct imatrix *ptr)
+{if(ptr->type != 'M') nrerror("error in freeimat");
+ nrfree_imatrix(ptr->mat,ptr->inrow,ptr->finrow,ptr->incol,ptr->fincol);
+}
+
+struct cvector
+{ char type;
+  char *ident;
+  char *vec;
+  int in;
+  int fin;
+};
+
+void incvec(struct cvector *ptr,int In,int Fin,char Ident[])
+{ int i;
+  ptr->type = 'c';
+  ptr->ident = Ident;
+  ptr->vec = nrcvector(In,Fin);
+  ptr->in = In;
+  ptr->fin = Fin;
+  for(i=In;i<=Fin;i++) ptr->vec[i] = ' ';
+}
+
+void freecvec(struct cvector *ptr)
+{if(ptr->type != 'c') nrerror("error in freevec");
+ nrfree_cvector(ptr->vec,ptr->in,ptr->fin);
+}
+
+
+
+double Evec(struct vector *V,int index,char rt[])
+{
+  double ret;int ex=0;
+  if( V->type == 'v'){
+   if( index >= V->in ){
+    if( index <= V->fin ){
+      ret = V->vec[index];ex=1;
+    }
+    else
+printf("RUN-TIME ERROR: evaluation index error (index = %i; too large)\n in vector %s in routine %s.\n",index,V->ident,rt);
+   } else
+printf("RUN-TIME ERROR: evaluation index error (index = %i; too small)\n in vector %s in routine %s.\n",index,V->ident,rt);
+  } else
+printf("RUN-TIME ERROR: evaluation type error in vector %s \n in routine %s.\n",V->ident,rt);
+  if(ex == 0) exit(1);else;
+  return ret;
+}
+
+int Eivec(struct ivector *V,int index,char rt[])
+{
+  int ret;int ex=0;
+  if( V->type == 'V'){
+   if( index >= V->in ){
+    if( index <= V->fin ){
+      ret = V->vec[index];ex=1;
+    }
+    else
+printf("RUN-TIME ERROR: evaluation index error (index = %i; too large)\n in ivector %s in routine %s.\n",index,V->ident,rt);
+   } else
+printf("RUN-TIME ERROR: evaluation index error (index = %i; too small)\n in ivector %s in routine %s.\n",index,V->ident,rt);
+  } else
+printf("RUN-TIME ERROR: evaluation type error in ivector %s \n in routine %s.\n",V->ident,rt);
+  if(ex == 0) exit(1);else;
+  return ret;
+}
+
+char Ecvec(struct cvector *V,int index,char rt[])
+{
+  char ret;int ex=0;
+  if( V->type == 'c'){
+   if( index >= V->in ){
+    if( index <= V->fin ){
+      ret = V->vec[index];ex=1;
+    }
+    else
+printf("RUN-TIME ERROR: evaluation index error (too large)\n in cvector %s in routine %s.\n",V->ident,rt);
+   } else
+printf("RUN-TIME ERROR: evaluation index error (too small)\n in cvector %s in routine %s.\n",V->ident,rt);
+  } else
+printf("RUN-TIME ERROR: evaluation type error in ivector %s \n in routine %s.\n",V->ident,rt);
+  if(ex == 0) exit(1);else;
+  return ret;
+}
+
+double Emat(struct matrix *M,int row_index,int col_index,char rt[])
+{
+  double ret;int ex=0;
+  if(M->type == 'm'){
+   if( row_index >= M->inrow ){
+    if( row_index <= M->finrow ){
+     if( col_index >= M->incol ){
+      if( col_index <= M->fincol ){
+       ret = M->mat[row_index][col_index];ex=1;
+    } else
+printf("RUN-TIME ERROR: evaluation index error \n (column index too large) in matrix %s in routine %s.\n",M->ident,rt);
+   } else
+printf("RUN-TIME ERROR: evaluation index error\n (column index too small) in matrix %s in routine %s.\n",M->ident,rt);
+  } else
+printf("RUN-TIME ERROR: evaluation index error\n (row index too large) in matrix %s in routine %s.\n",M->ident,rt);
+   } else
+printf("RUN-TIME ERROR: evaluation index error\n (row index too small) in matrix %s in routine %s.\n",M->ident,rt);
+  } else
+printf("RUN-TIME ERROR: evaluation type error in matrix %s \n in routine %s.\n",M->ident,rt);
+  if(ex == 0) exit(1);else;
+  return ret;
+}
+
+char Ecmat(struct cmatrix *M,int row_index,int col_index,char rt[])
+{
+  char ret;int ex=0;
+  if(M->type == 'c'){
+   if( row_index >= M->inrow ){
+    if( row_index <= M->finrow ){
+     if( col_index >= M->incol ){
+      if( col_index <= M->fincol ){
+       ret = M->mat[row_index][col_index];ex=1;
+    } else
+printf("RUN-TIME ERROR: evaluation index error \n (column index too large) in cmatrix %s in routine %s.\n",M->ident,rt);
+   } else
+printf("RUN-TIME ERROR: evaluation index error\n (column index too small) in cmatrix %s in routine %s.\n",M->ident,rt);
+  } else
+printf("RUN-TIME ERROR: evaluation index error\n (row index too large) in cmatrix %s in routine %s.\n",M->ident,rt);
+   } else
+printf("RUN-TIME ERROR: evaluation index error\n (row index too small) in cmatrix %s in routine %s.\n",M->ident,rt);
+  } else
+printf("RUN-TIME ERROR: evaluation type error in cmatrix %s \n in routine %s.\n",M->ident,rt);
+  if(ex == 0) exit(1);else;
+  return ret;
+}
+
+int Eimat(struct imatrix *M,int row_index,int col_index,char rt[])
+{
+  int ret;int ex=0;
+  if(M->type == 'M'){
+   if( row_index >= M->inrow ){
+    if( row_index <= M->finrow ){
+     if( col_index >= M->incol ){
+      if( col_index <= M->fincol ){
+       ret = M->mat[row_index][col_index];ex=1;
+    } else
+printf("RUN-TIME ERROR: evaluation index error \n (column index too large) in imatrix %s in routine %s.\n",M->ident,rt);
+   } else
+printf("RUN-TIME ERROR: evaluation index error\n (column index too small) in imatrix %s in routine %s.\n",M->ident,rt);
+  } else
+printf("RUN-TIME ERROR: evaluation index error\n (row index too large) in imatrix %s in routine %s.\n",M->ident,rt);
+   } else
+printf("RUN-TIME ERROR: evaluation index error\n (row index too small) in imatrix %s in routine %s.\n",M->ident,rt);
+  } else
+printf("RUN-TIME ERROR: evaluation type error in imatrix %s \n in routine %s.\n",M->ident,rt);
+  if(ex == 0) exit(1);else;
+  return ret;
+}
+
+void Avec(struct vector *V,int index,double float_num,char rt[])
+{
+  int ex=0;
+  if( V->type == 'v'){
+   if( index >= V->in ){
+    if( index <= V->fin ){
+      V->vec[index] = float_num;ex=1;
+    }
+    else
+printf("RUN-TIME ERROR: assignment index error (too large) in vector %s in routine %s.\n",V->ident,rt);
+   } else
+printf("RUN-TIME ERROR: assignment index error (too small)in vector %s in routine %s.\n",V->ident,rt);
+  } else
+printf("RUN-TIME ERROR: assignment type error in vector %s in routine %s.\n",V->ident,rt);
+  if(ex == 0) exit(1);else;
+}
+
+void Aivec(struct ivector *V,int index,int int_num,char rt[])
+{
+  int ex=0;
+  if( V->type == 'V'){
+   if( index >= V->in ){
+    if( index <= V->fin ){
+      V->vec[index] = int_num;ex=1;
+    }
+    else
+printf("RUN-TIME ERROR: assignment index error (too large)\n in ivector %s in routine %s.\n",V->ident,rt);
+   } else
+printf("RUN-TIME ERROR: assignment index error (too small)\n in ivector %s in routine %s.\n",V->ident,rt);
+  } else
+printf("RUN-TIME ERROR: assignment type error in ivector %s \n in routine %s.\n",V->ident,rt);
+  if(ex == 0) exit(1);else;
+}
+
+void Acvec(struct cvector *V,int index,double c_num,char rt[])
+{
+  int ex=0;
+  if( V->type == 'c'){
+   if( index >= V->in ){
+    if( index <= V->fin ){
+      V->vec[index] = c_num;ex=1;
+    }
+    else
+printf("RUN-TIME ERROR: assignment index error (too large)\n in cvector %s in routine %s.\n",V->ident,rt);
+   } else
+printf("RUN-TIME ERROR: assignment index error (too small)\n in cvector %s in routine %s.\n",V->ident,rt);
+  } else
+printf("RUN-TIME ERROR: assignment type error in cvector %s \n in routine %s.\n",V->ident,rt);
+  if(ex == 0) exit(1);else;
+}
+
+void Amat(struct matrix *M,int row_index,int col_index,
+double float_num,char rt[])
+{
+  int ex=0;
+  if(M->type == 'm'){
+   if( row_index >= M->inrow ){
+    if( row_index <= M->finrow ){
+     if( col_index >= M->incol ){
+      if( col_index <= M->fincol ){
+        M->mat[row_index][col_index] = float_num;ex=1;
+    } else
+printf("RUN-TIME ERROR: assignment index error\n (column index too large) in matrix %s in routine %s.\n",M->ident,rt);
+   } else
+printf("RUN-TIME ERROR: assignment index error\n (column index too small) in matrix %s in routine %s.\n",M->ident,rt);
+  } else
+printf("RUN-TIME ERROR: assignment index error\n (row index too large) in matrix %s in routine %s.\n",M->ident,rt);
+   } else
+printf("RUN-TIME ERROR: assignment index error\n (row index too small) in matrix %s in routine %s.\n",M->ident,rt);
+  } else
+printf("RUN-TIME ERROR: assignment type error\n in matrix %s in routine %s.\n",M->ident,rt);
+  if(ex == 0) exit(1);else;
+}
+
+void Acmat(struct cmatrix *M,int row_index,int col_index,
+double char_num,char rt[])
+{
+  int ex=0;
+  if(M->type == 'c'){
+   if( row_index >= M->inrow ){
+    if( row_index <= M->finrow ){
+     if( col_index >= M->incol ){
+      if( col_index <= M->fincol ){
+        M->mat[row_index][col_index] = char_num;ex=1;
+    } else
+printf("RUN-TIME ERROR: assignment index error\n (column index too large) in cmatrix %s in routine %s.\n",M->ident,rt);
+   } else
+printf("RUN-TIME ERROR: assignment index error\n (column index too small) in cmatrix %s in routine %s.\n",M->ident,rt);
+  } else
+printf("RUN-TIME ERROR: assignment index error\n (row index too large) in cmatrix %s in routine %s.\n",M->ident,rt);
+   } else
+printf("RUN-TIME ERROR: assignment index error\n (row index too small) in cmatrix %s in routine %s.\n",M->ident,rt);
+  } else
+printf("RUN-TIME ERROR: assignment type error\n in cmatrix %s in routine %s.\n",M->ident,rt);
+  if(ex == 0) exit(1);else;
+}
+
+
+void Aimat(struct imatrix *M,int row_index,int col_index,
+int int_num,char rt[])
+{
+  int ex=0;
+  if(M->type == 'M'){
+   if( row_index >= M->inrow ){
+    if( row_index <= M->finrow ){
+     if( col_index >= M->incol ){
+      if( col_index <= M->fincol ){
+	M->mat[row_index][col_index] = int_num;ex=1;
+    } else
+printf("RUN-TIME ERROR: assignment index error\n (column index too large) in imatrix %s in routine %s.\n",M->ident,rt);
+   } else
+printf("RUN-TIME ERROR: assignment index error\n (column index too small) in imatrix %s in routine %s.\n",M->ident,rt);
+  } else
+printf("RUN-TIME ERROR: assignment index error\n (row index too large) in imatrix %s in routine %s.\n",M->ident,rt);
+   } else
+printf("RUN-TIME ERROR: assignment index error\n (row index too small) in imatrix %s in routine %s.\n",M->ident,rt);
+  } else
+printf("RUN-TIME ERROR: assignment type error\n in imatrix %s in routine %s.\n",M->ident,rt);
+  if(ex == 0) exit(1);else;
+}
+
+
+void vecswap(struct vector *V1,int index1,struct vector *V2,int index2)
+{
+  double dum;
+  char rt[] = "vecswap";
+  dum = Evec(V1,index1,rt);
+  Avec(V1,index1,Evec(V2,index2,rt),rt);
+  Avec(V2,index2,dum,rt);
+}
+
+void ivecswap(struct ivector *V1,int index1,struct ivector *V2,int index2)
+{
+  int dum;
+  char rt[] = "ivecswap";
+  dum = Eivec(V1,index1,rt);
+  Aivec(V1,index1,Eivec(V2,index2,rt),rt);
+  Aivec(V2,index2,dum,rt);
+}
+void matswap(struct matrix *M1,int row1,int col1,
+struct matrix *M2,int row2,int col2)
+{
+  double dum;
+  char rt[] = "matswap";
+  dum = Emat(M1,row1,col1,rt);
+  Amat(M1,row1,col1,Emat(M2,row2,col2,rt),rt);
+  Amat(M2,row2,col2,dum,rt);
+}
+void imatswap(struct imatrix *M1,int row1,int col1,
+struct imatrix *M2,int row2,int col2)
+{
+  int dum;
+  char rt[] = "matswap";
+  dum = Eimat(M1,row1,col1,rt);
+  Aimat(M1,row1,col1,Eimat(M2,row2,col2,rt),rt);
+  Aimat(M2,row2,col2,dum,rt);
+}
