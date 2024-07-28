@@ -1,15 +1,12 @@
 # Computing Large Deviation Functionals of not identically distributed independent random variables
 
-In this repository, there are the C-scripts we used to compute the large deviation functionals in "On Magnetic Models in Wavefunction Ensembles", published in [Entropy 2023, 25, 564](https://www.mdpi.com/1099-4300/25/4/564) covering theorem 3.
+In this repository, there are the C-scripts we used to compute the large deviation functionals of theorem 3 in "On Magnetic Models in Wavefunction Ensembles" ([Entropy 2023, 25, 564](https://www.mdpi.com/1099-4300/25/4/564)).
 The corresponding preprint version "On Schrödingerist Quantum Thermodynamics" is available on [arXiv:2208.07688](http://arxiv.org/abs/2208.07688), where this is referred to as theorem 2.
 
 We suggest to refer to the arXiv version since we prefer its organization and there are some corrections to conceptual sentences (proofs are unchanged).
 Here we refer to the arXiv version for the enumeration.
 
 The repository contains all the necessary header files to run the main script [Large_Deviations_SCW.c](Large_Deviations_SCW.c), which computes the large deviation functionals (157) (or (161)) and (162). These are rate functionals of NOT-identically distributed independent Gaussian random variables; therefore, no explicit formula is possible. Moreover, the computed probabilities in (146) depend on a parameter \(x\), which sets the set of wavefunctions over which the probability integral (144) is computed. The computational techniques are developed for Gaussian random variables because of how wavefunction ensembles are defined, but they do not restrict to the Gaussian case.
-
-
-
 
 
 ## Computational Appendix F
