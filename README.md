@@ -12,17 +12,17 @@ The repository contains all the necessary header files to run the main script [L
 ## Computational Appendix F
 
 **Figures:**
-- **Figure 1**: [Geometry of the Domain D](Figures/figure_1.png) - This figure shows the geometry of the domain D.See the papers for how to obtain it.
+- **Figure 1**: [Geometry of the Domain D](Figures/figure_1.png) - This figure shows the geometry of the domain D. See the papers for how to obtain it.
 - **Figure 2**: [Domain and Constraint Set, by Simulation](Figures/SCW_D_and_G_plot.pdf) - This figure illustrates the domain and constraint set by sampling.
 - **Figure 3**: [I-functions of x](Figures/SCWIplot.pdf) - This figure plots the I-functions of x.
-
+ 
 
 
 **Description:**
 
 After implementing the functions appearing in Math Appendix D in a program, we employed a sampling scheme to locate the constraint set. The idea is to choose at random a ray emanating from point $'P'$ of [figure_1](Figures/figure_1.png), then a point on the ray staying within the domain $D$. (We also tried a ray emanating from the origin, which gave similar results.)
 
-By experiment, we discovered that for $x$ near $0$ near zero, the region $G$ shrank to nearly a line close to line $A$ in [figure_1](Figures/figure_1.png), while the constraint set for generating $I_1$ lays almost at the left endpoint, $'P'$. Hence, we needed sampling schemes that could be biased to prefer points near the endpoints of a given interval $[a, b]$ of the real axis. Such schemes are given by:
+By experiment, we discovered that for $x$ near $0$, the region $G$ shrank to nearly a line close to line $A$ in [figure_1](Figures/figure_1.png), while the constraint set for generating $I_1$ lays almost at the left endpoint, $'P'$. Hence, we needed sampling schemes that could be biased to prefer points near the endpoints of a given interval $[a, b]$ of the real axis. Such schemes are given by:
 
 - To bias near $b$, choose a point $s$ by the scheme:
   
