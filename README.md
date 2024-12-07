@@ -46,6 +46,6 @@ Our sampling scheme in the region $D$ was the following:
 
 If the selected $(\theta_1, \theta_2)$ pass all the tests to lie in $D$, accept the values; otherwise, reject them.
 
-To locate the constraint set, we sampled many pairs $(\theta_1, \theta_2)$ as above and evaluated the two partial derivatives of $c$, keeping and plotting the points that had the required signs. The results—see [figure_2](Figures/figure_2.png); parameters in the figure were $x = 0.7$ and $\epsilon = 0.3$—show that $G$ lies in the upper half of the plane, and is disjoint from the horizontal axis. [Figure_3](Figures/figure_1.png) shows curves of the I-functions obtained by sampling for a few values of $x$ ($0.1$ to $0.7$, in increments of $0.1$). We used $10$ billion samples at each $x$-value.
+To locate the constraint set, we sampled many pairs $(\theta_1, \theta_2)$ as above and evaluated the two partial derivatives of $c$, keeping and plotting the points that had the required signs. The results—see [figure_2](Figures/figure_2.png); parameters in the figure were $x = 0.7$ and $\epsilon = 0.3$—show that $G$ lies in the upper half of the plane, and is disjoint from the horizontal axis. [figure_3](Figures/figure_1.png) shows curves of the I-functions obtained by sampling for a few values of $x$ ($0.1$ to $0.7$, in increments of $0.1$). We used $10$ billion samples at each $x$-value.
 
 Unfortunately, we were unable to estimate the I-functions for $x < 0.1$ because few or no sampled points fell in the constraint set (even with various choices of bias), for reason indicated earlier.
