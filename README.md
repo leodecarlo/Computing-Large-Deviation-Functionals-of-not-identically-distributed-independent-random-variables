@@ -12,9 +12,9 @@ The repository contains all the necessary header files to run the main script [L
 ## Computational Appendix F
 
 **Figures:**
-- **Figure 1**: [Geometry of the Domain D](Figures/Figure_1.png) - This figure shows the geometry of the domain D. See the papers for how to obtain it.
-- **Figure 2**: [Domain and Constraint Set, by Simulation](Figures/SCW_D_and_G_plot.pdf) - This figure illustrates the domain and constraint set by sampling.
-- **Figure 3**: [I-functions of x](Figures/SCWIplot.pdf) - This figure plots the I-functions of x.
+- **Figure 1**: [Geometry of the Domain D](Figures/figure_1.png) - This figure shows the geometry of the domain D. See the papers for how to obtain it.
+- **Figure 2**: [Domain and Constraint Set, by Simulation](Figures/figure_2.png) - This figure illustrates the domain and constraint set by sampling.
+- **Figure 3**: [I-functions of x](Figures/figure_3.png) - This figure plots the I-functions of x.
  
 
 
